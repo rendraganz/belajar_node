@@ -1,15 +1,20 @@
 const express = require('express');
 const cors = require('cors');
-
 const app = express();
 const port = 3100;
 
 let idSeq = 3;
 
 let movies = [
-    {id: 1, title: 'Inception', director: 'yayya', year: 2010},
-    {id: 2, title: 'The Matrix', director: 'The Wachowskis', year: 1999},
-    {id: 3, title: 'Interstellar', director: 'Christopher Nolan', year: 2014}
+    {id: 1, title: 'Suami Takut Istri', director: 'Suami First', year: 2015},
+    {id: 2, title: 'Second Choice', director: 'Suami Second', year: 2015},
+    {id: 3, title: 'Tukang Haji Naik Pajero', director: 'Rendra', year: 2025}
+];
+
+let directors = [
+    {id: 1, name: 'Suami First', birthYear: 1945},
+    {id: 2, name: 'Suami Second', birthYear: 1967},
+    {id: 3, name: 'Rendra', birthYear: 2006}
 ];
 
 // Middleware to parse JSON bodies
@@ -26,6 +31,50 @@ app.get('/', (req, res) => {
     });
 });
 
+app.get('/directors', (req, res) => {
+    res.json(directors);
+});
+
+app.get('/directors/:id', (req, res) => {
+    const id = Number(req.params.id);
+    const director = directors.find(d => d.id === id);
+    if (!director)
+        return res.status(404).json({ error: 'Director tidak ditemukan' }
+    );
+    res.json(director);
+});
+
+app.post('/directors', (req, res) => {
+    const { name, birthYear } = req.body;
+    if (!name || !birthYear) {
+        return res.status(400).json({ error: 'Data director tidak lengkap' });
+    }
+    const newDirector = { id: movies.length + 1, name, birthYear };
+    directors.push(newDirector);
+    res.status(201).json(newDirector);
+});
+
+app.put('/directors/:id', (req, res) => {
+    const id = Number(req.params.id);
+    const directorIndex = directors.findIndex(m => m.id === id);
+    if (directorIndex === -1)
+        return res.status(404).json({ error: 'Director tidak ditemukan' }
+    )
+    const { name, birthYear } = req.body || {};
+    const updatedDirector = { id, name, birthYear };
+    directors[directorIndex] = updatedDirector;
+    res.json(updatedDirector);
+});
+
+app.delete('/directors/:id', (req, res) => {
+    const id = Number(req.params.id);
+    const directorIndex = directors.findIndex(m => m.id === id);
+    if (directorIndex === -1)
+        return res.status(404).json({ error: 'Director tidak ditemukan' }
+    )
+    directors.splice(directorIndex, 1);
+    res.status(204).end();
+});
 app.get('/movies', (req, res) => {
     res.json(movies);
 });
@@ -42,7 +91,7 @@ app.post('/movies', (req, res) => {
     if (!title || !director || !year) {
         return res.status(400).json({ error: 'Data film tidak lengkap' });
     }
-    const newMovie = { id: ++idSeq, title, director, year };
+    const newMovie = { id: movies.length + 1, title, director, year };
     movies.push(newMovie);
     res.status(201).json(newMovie);
 });
